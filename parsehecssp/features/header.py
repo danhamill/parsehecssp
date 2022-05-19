@@ -16,19 +16,19 @@ class Header(object):
     def import_rpt(self, line, rpt_file):
         self.analysis_type = line.strip()
         line = next(rpt_file)
-        print('here')
+
         self.compute_day = line.split()[0]
-        self.comput_month = line.split()[1]
+        self.compute_month = line.split()[1]
         self.compute_year = line.split()[2]
-        self.compute_hour = line.split()[3]
-        self.comput_locale = line.split()[4]
+        self.compute_time = line.split()[3]
+        self.compute_locale = line.split()[4]
 
 
         return next(rpt_file)
 
     def __str__(self):
         s = '-----------------------------\n'
-        s+= f'{self.analysis_type} \n'
-        s+= f'   {self.compute_day} {self.compute_hour} {self.compute_year}   {self.compute_time} {self.compute_locale}\n'
-        s = '-----------------------------\n'
+        s+= f'{self.analysis_type}\n'
+        s+= f'   {self.compute_day} {self.compute_month} {self.compute_year}   {self.compute_time} {self.compute_locale}\n'
+        s+= '-----------------------------\n'
         return s

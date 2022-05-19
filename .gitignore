@@ -1,2 +1,3 @@
 parsehecssp/features/__pycache__/
 parsehecssp/__pycache__/
+tests/testVolFreq.out

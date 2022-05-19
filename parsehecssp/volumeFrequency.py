@@ -1,4 +1,6 @@
+from ast import In
 from .features.header import Header
+from .features.inputdata import InputData
 import os.path
 
 class ParseVolumeFrequency(object):
@@ -11,6 +13,11 @@ class ParseVolumeFrequency(object):
                 if Header.test(line):
                     hh = Header()
                     hh.import_rpt(line, rpt_file)
+                    self.analysis_parts.append(hh)
+                elif InputData.test(line):
+                    id = InputData()
+                    id.import_rpt(line, rpt_file)
+                    self.analysis_parts.append(id)
                 else:
                     #Unknown line
                     self.analysis_parts.append(line)
