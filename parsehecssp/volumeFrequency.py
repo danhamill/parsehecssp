@@ -1,6 +1,7 @@
 from ast import In
 from .features.header import Header
 from .features.inputdata import InputData
+from .features.nDayResults import NDayResult
 import os.path
 
 class ParseVolumeFrequency(object):
@@ -18,6 +19,10 @@ class ParseVolumeFrequency(object):
                     id = InputData()
                     id.import_rpt(line, rpt_file)
                     self.analysis_parts.append(id)
+                elif NDayResult.test(line):
+                    nd = NDayResult()
+                    nd.import_rpt(line, rpt_file)
+                    self.analysis_parts.append(nd)
                 else:
                     #Unknown line
                     self.analysis_parts.append(line)

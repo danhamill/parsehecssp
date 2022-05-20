@@ -14,28 +14,22 @@ def check_files(out_file, rpt_filename):
     output = []
     for line1 in f1:
         i += 1
-        
         for line2 in f2:
-            
             # matching line1 from both files
             if line1 == line2:  
                 pass
- 
             else:
                 output.append(["Line ", i, ":"])
-
             break
-
     
     # closing files
     f1.close()                                       
     f2.close() 
-
     return output
 
 def main():
     out_file = r'tests\testVolFreq.out'
-    rpt_filename = r'tests\Unreg_Flow_Rio_Grande_Test_10.rpt'
+    rpt_filename = r'tests\Sinnemahoning_VolumeFrequency.rpt'
 
 
     rpt = phsp.volumeFrequency.ParseVolumeFrequency(rpt_filename)
