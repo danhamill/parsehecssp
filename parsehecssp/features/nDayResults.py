@@ -72,56 +72,212 @@ class EmaData(SubFeature):
 class Moments(SubFeature):
 
     def __init__(self) -> None:
-        super().__init__()
+        self.rows = []
+        self.emaSiteWithOutRegional = dict.fromkeys(['mean','variance','stDev','skew'])
+        self.emaWithRegionalAndB17bMSE = dict.fromkeys(['mean','variance','stDev','skew'])
+        self.emaWithRegionalAndSepcifMSE = dict.fromkeys(['mean','variance','stDev','skew'])
+        self.emaEstimateMSE = None
+        self.mseAtSite = None
+        self.erlAtSite = None
+        self.erlSystHistnoOutlier = None
+        self.erlCohn1997 = None
+        self.grubbCritValue = None
+        self.numYearNonInfThresholds = None
+
 
     def import_rpt(self, line, rpt_file):
+        
+        while line.strip() != '--- Final Results ---':
+            if line == '\n':
+                self.rows.append(line)
+            elif line[:36] == '  EMA at-site data w/o regional info':
+                chunks = line.strip().split()[-4:]
+                self.emaSiteWithOutRegional = dict(zip(self.emaSiteWithOutRegional, chunks))
+                self.rows.append(line)
+            elif line[:38] == '  EMA w/ regional info and B17b MSE(G)':
+                chunks = line.strip().split()[-4:]
+                self.emaWithRegionalAndB17bMSE = dict(zip(self.emaWithRegionalAndB17bMSE, chunks))
+                self.rows.append(line)               
+            elif line[:43] == '  EMA w/ regional info and specified MSE(G)':
+                chunks = line.strip().split()[-4:]
+                self.emaWithRegionalAndSepcifMSE = dict(zip(self.emaWithRegionalAndSepcifMSE, chunks))
+                self.rows.append(line)
+            elif line[:32] == '  EMA Estimate of MSE[G at-site]':
+                self.emaEstimateMSE = line.strip().split()[-1]
+                self.rows.append(line)
+            elif line[:27] == '  MSE[G at-site systematic]':
+                self.mseAtSite = line.strip().split()[-1]
+                self.rows.append(line)
+            elif line[:38] == '  Equivalent Record Length [G at-site]':
+                self.erlAtSite = line.strip().split()[-1]
+                self.rows.append(line)
+            elif line[:46] == '  Equivalent Record Length [Syst+Hist-LowOutl]':
+                self.erlSystHistnoOutlier = line.strip().split()[-1]
+                self.rows.append(line)
+            elif line[:46] == '  Equivalent Record Length [Cohn et al (1997)]':
+                self.erlCohn1997 = line.strip().split()[-1]
+                self.rows.append(line)
+            elif line[:28] == '  Grubbs-Beck Critical Value':
+                self.grubbCritValue = line.strip().split()[-1]
+                self.rows.append(line)
+            elif line[:35] == '  # Years w/ non [0-inf] Thresholds':
+                self.numYearNonInfThresholds = line.strip().split()[-1]
+                self.rows.append(line)
+            else:
+                self.rows.append(line)
+
+            line = next(rpt_file)
+
+        self.rows.append(line)
         return rpt_file
     
     def __str__(self):
-        return super().__str__()
+        s = ''
 
-class EmpericalData(SubFeature):
+        for row in self.rows:
+            s += row
+
+        return s
+
+class EmpiricalData(SubFeature):
 
     def __init__(self) -> None:
-        super().__init__()
+        self.rows = []
+        self.events = {}
+        self.ordered_events= {}
+
 
     def import_rpt(self, line, rpt_file):
+
+        # Header
+        while not bool(re.match("\d{4}", line[10:14])):
+            self.rows.append(line)
+            line = next(rpt_file) 
+
+        # Table
+        while line[:6] != '|-----':
+            chunks = line.split()
+            self.events.update({''.join(chunks[1:4]):chunks[4]})
+            self.ordered_events.update({chunks[6]:{'wy':chunks[7],
+                                                   'flow':chunks[8],
+                                                   'hsPlotPos':chunks[9]}
+                                        })
+            self.rows.append(line)
+            line = next(rpt_file)
+        
+        # Footer
+        while line != '\n':
+            self.rows.append(line)
+            line = next(rpt_file)
+
+
         return rpt_file
 
     def __str__(self):
-        return super().__str__()
+
+        s = ''
+        for row in self.rows:
+            s += row
+        return s
 
 class FrequencyCurve(SubFeature):
 
     def __init__(self) -> None:
-        super().__init__()
+        self.rows = []
+        self.computedCurve = {}
+        self.upperConf = {}
+        self.lowerConf = {}
+
 
     def import_rpt(self, line, rpt_file):
+
+        table_delim = '|------------------------------|-------------|-----------------------------|'
+        while line.strip() != table_delim:
+            self.rows.append(line)
+            line = next(rpt_file)
+
+        self.rows.append(line)
+        line = next(rpt_file)
+        while line.strip() != table_delim:
+            chunks = line.split()
+
+            pctExceedance = chunks[4]
+
+            self.computedCurve.update({pctExceedance:{'flow':chunks[1],
+                                                      'variance':chunks[2]}
+                                      })
+            self.upperConf.update({pctExceedance:chunks[-3]})
+            self.lowerConf.update({pctExceedance:chunks[-2]})
+            self.rows.append(line)
+            line = next(rpt_file)
+        self.rows.append(line)
+        
         return rpt_file
     
     def __str__(self):
-        return super().__str__()
+        s = ''
+        for row in self.rows:
+            s += row
+        return s
 
 
 class MGBT(SubFeature):
 
     def __init__(self) -> None:
-        super().__init__()
+        self.rows = []
+        self.mgbt_table = {}
+
 
     def import_rpt(self, line, rpt_file):
+        
+        table_delim = '|----------------|-------------|'
+        while line.strip != table_delim:
+            self.rows.append(line)
+            line = next(rpt_file)
+        
+        self.rows.append(line)
+        line = next(rpt_file)
+
+        while line.strip != table_delim:
+            chunks= line.split()
+            self.mgbt_table.update({chunks[1]:chunks[-1]})
+            self.rows.append(line)
+            line = next(rpt_file)
+
+        self.rows.append(line)
+
+
         return rpt_file
     
     def __str__(self):
-        return super().__str__()
+        s = ''
+        for row in self.rows:
+            s += row
+        return s
 
 
 class AnalyticalStats(SubFeature):
 
     def __init__(self) -> None:
-        super().__init__()
+        self.rows = []
+        self.stats = []
+        self.num_events = []
     
 
     def import_rpt(self, line, rpt_file):
+        table_delim = '|------------------------------|-------------------------------|'
+
+        while line.strip() != table_delim:
+            self.rows.append(line)
+            line = next(rpt_file)
+
+        self.rows.append(line)
+        line = next(rpt_file)
+
+        #find index of pipe in string
+        [i for i in range(len(line)) if line.startswith('|', i)]
+
+        
         return rpt_file
     
     def __str__(self):
@@ -173,7 +329,7 @@ class NDayResult(Feature):
         self.header = Header()
         self.ema_data = EmaData()
         self.moments = Moments()
-        self.empericalData = EmpericalData()
+        self.empiricalData = EmpiricalData()
         self.frequencyCurve = FrequencyCurve()
         self.mgbt = MGBT()
         self.analyticalStats = AnalyticalStats()
@@ -198,8 +354,27 @@ class NDayResult(Feature):
             elif line == '<< EMA Representation of Data >>\n':
                 self.ema_data.import_rpt(line, rpt_file)
                 self.parts.append(self.ema_data)
-            elif line[:22] ==   'Fitted log10 Moments':
+            elif line[:22] == '  Fitted log10 Moments':
                 self.moments.import_rpt(line, rpt_file)
+                self.parts.append(self.moments)
+            elif line.strip() == '<< Plotting Positions >>':
+                self.empiricalData.import_rpt(line, rpt_file)
+                self.parts.append(self.empiricalData)
+            elif line.strip() == '<< Frequency Curve >>':
+                self.frequencyCurve.import_rpt(line, rpt_file)
+                self.parts.append(self.frequencyCurve)
+            elif line.strip() == '<< Multiple Grubbs-Beck Test P-Values >>':
+                self.mgbt.import_rpt(line, rpt_file)
+                self.parts.append(self.mgbt)
+            elif line[:23] == '|        Log Transform:':
+                self.analyticalStats.import_rpt(line, rpt_file)
+                self.parts.append(self.analyticalStats)
+            elif line.strip() == '<< User Frequency Curve >>':
+                self.userFreqCurve.import_rpt(line, rpt_file)
+                self.parts.append(line)
+            elif line.strip() == '<< User Statistics >>':
+                self.userStats.import_rpt(line, rpt_file)
+                self.parts.append(line)
             else:
                 #unknown line
                 self.parts.append(line)
