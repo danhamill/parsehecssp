@@ -1,6 +1,6 @@
 # pasrsehecssp
 
-![example workflow]https://github.com/danhamill/parsehecssp/.github/workflows/python-publish.yml/badge.svg)
+![example workflow](https://github.com/danhamill/parsehecssp/.github/workflows/python-publish.yml/badge.svg)
 
 
 HEC-SSP Report Parser
