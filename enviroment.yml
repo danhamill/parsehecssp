@@ -1,0 +1,8 @@
+name: parsehecssp
+channels:
+  - conda-forge
+dependendencies:
+  - python=3.9
+  - altair
+  - pandas
+  - altair_viewer
