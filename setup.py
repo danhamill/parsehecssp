@@ -6,9 +6,9 @@ setuptools.setup(
  author = 'Daniel Hamill',
  author_email = 'daniel.hamill@hey.com',
  description = 'Parse HEC-SSP report Files',
- packages = ['parsehecssp', 'parsehecssp.volumeFrequency'],
+ packages = ['parsehecssp', 'parsehecssp.features'],
  license='MIT',
- package_dir={'':'parsehecssp'},
+#  package_dir={'':'parsehecssp'},
  classifiers=[
     "Development Status :: 1 - Beta",
     'Intended Audience :: Developers',
