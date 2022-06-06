@@ -1,4 +1,3 @@
-from ast import Sub
 from .feature import Feature, SubFeature
 from .utils import split_by_n_str
 import re
@@ -60,12 +59,13 @@ class EmaData(SubFeature):
 
     def __str__(self):
         s = '<< EMA Representation of Data >>\n'
-        s+= f'{self.name}\n'
+        s+= f'{self.name}'
         for line in self.header:
             s+= line
         for row in self.rows:
             s+= row
-        s+= self.footer    
+        s+= self.footer  
+        s+= '\n'  
 
         return s
 
@@ -136,6 +136,7 @@ class Moments(SubFeature):
 
         for row in self.rows:
             s += row
+        # s+='\n'
 
         return s
 
@@ -170,7 +171,7 @@ class EmpiricalData(SubFeature):
             self.rows.append(line)
             line = next(rpt_file)
 
-
+        self.rows.append(line)
         return rpt_file
 
     def __str__(self):
@@ -231,16 +232,16 @@ class MGBT(SubFeature):
     def import_rpt(self, line, rpt_file):
         
         table_delim = '|----------------|-------------|'
-        while line.strip != table_delim:
+        while line.strip() != table_delim:
             self.rows.append(line)
             line = next(rpt_file)
         
         self.rows.append(line)
         line = next(rpt_file)
 
-        while line.strip != table_delim:
+        while line.strip() != table_delim:
             chunks= line.split()
-            self.mgbt_table.update({chunks[1]:chunks[-1]})
+            self.mgbt_table.update({chunks[1]:chunks[-2]})
             self.rows.append(line)
             line = next(rpt_file)
 
@@ -260,8 +261,8 @@ class AnalyticalStats(SubFeature):
 
     def __init__(self) -> None:
         self.rows = []
-        self.stats = []
-        self.num_events = []
+        self.stats = {}
+        self.num_events = {}
     
 
     def import_rpt(self, line, rpt_file):
@@ -274,36 +275,115 @@ class AnalyticalStats(SubFeature):
         self.rows.append(line)
         line = next(rpt_file)
 
-        #find index of pipe in string
-        [i for i in range(len(line)) if line.startswith('|', i)]
+        while line.strip() != table_delim:
 
+            # Find indices of pipes in string
+            col_idx = [i for i in range(len(line)) if line.startswith('|', i)]
+            
+            left_table = line[1:col_idx[1]].strip().split()
+            self.stats.update({' '.join(left_table[:-1]):left_table[-1]})
+
+            right_table = line[col_idx[1]+1:].strip().split()[:-1]
+            self.num_events.update({' '.join(right_table[:-1]):right_table[-1]})
+            self.rows.append(line)
+
+            line = next(rpt_file)
+        
+        self.rows.append(line)
         
         return rpt_file
     
     def __str__(self):
-        return super().__str__()
+        s = ''
+        for row in self.rows:
+            s += row
+        return s
+
 
 class UserFrequencyCurve(SubFeature):
 
     def __init__(self) -> None:
-        super().__init__()
-    
+        self.rows = []
+        self.computedCurve = {}
+        self.upperConf = {}
+        self.lowerConf = {}
+
+
     def import_rpt(self, line, rpt_file):
+
+        table_delim = '|------------------------------|-------------|-----------------------------|'
+        while line.strip() != table_delim:
+            self.rows.append(line)
+            line = next(rpt_file)
+
+        self.rows.append(line)
+        line = next(rpt_file)
+        while line.strip() != table_delim:
+            chunks = line.split()
+
+            pctExceedance = chunks[4]
+
+            self.computedCurve.update({pctExceedance:{'flow':chunks[1],
+                                                      'variance':chunks[2]}
+                                      })
+            self.upperConf.update({pctExceedance:chunks[-3]})
+            self.lowerConf.update({pctExceedance:chunks[-2]})
+            self.rows.append(line)
+            line = next(rpt_file)
+        self.rows.append(line)
+        
         return rpt_file
     
     def __str__(self):
-        return super().__str__()
+        s = ''
+        for row in self.rows:
+            s += row
+        return s
 
 class UserStatistics(SubFeature):
 
     def __init__(self) -> None:
-        super().__init__()
+        self.rows = []
+        self.stats = {}
+        self.num_events = {}
+    
 
     def import_rpt(self, line, rpt_file):
+        table_delim = '|------------------------------|-------------------------------|'
+
+        while line.strip() != table_delim:
+            self.rows.append(line)
+            line = next(rpt_file)
+
+        self.rows.append(line)
+        line = next(rpt_file)
+
+        while line.strip() != table_delim:
+
+            # Find indices of pipes in string
+            col_idx = [i for i in range(len(line)) if line.startswith('|', i)]
+            
+            left_table = line[1:col_idx[1]].strip().split()
+            if len(left_table)>0:
+                self.stats.update({' '.join(left_table[:-1]):left_table[-1]})
+
+            right_table = line[col_idx[1]+1:].strip().split()[:-1]
+            if len(right_table)>0:
+                self.num_events.update({' '.join(right_table[:-1]):right_table[-1]})
+            self.rows.append(line)
+
+            line = next(rpt_file)
+        
+        self.rows.append(line)
+        
         return rpt_file
     
     def __str__(self):
-        return super().__str__()
+        s = ''
+        for row in self.rows:
+            s += row
+        return s
+
 
 class Header(SubFeature):
     
@@ -320,7 +400,7 @@ class Header(SubFeature):
         s = '============================================================================\n'
         s+= f'Statistical Analysis of {self.duration}-day Maximum values\n'
         s+= '============================================================================\n'
-        return super().__str__()
+        return s
 
 
 class NDayResult(Feature):
@@ -343,7 +423,7 @@ class NDayResult(Feature):
             return True
         return False
 
-    def import_rpt(self, line, rpt_file):
+    def import_rpt(self, line, rpt_file, max_dur):
         
         while line[:5] != '=====':
             if line == '\n':
@@ -371,17 +451,27 @@ class NDayResult(Feature):
                 self.parts.append(self.analyticalStats)
             elif line.strip() == '<< User Frequency Curve >>':
                 self.userFreqCurve.import_rpt(line, rpt_file)
-                self.parts.append(line)
+                self.parts.append(self.userFreqCurve)
+                # self.parts.append(line)
             elif line.strip() == '<< User Statistics >>':
                 self.userStats.import_rpt(line, rpt_file)
-                self.parts.append(line)
+                self.parts.append(self.userStats)
+                # self.parts.append(line)
             else:
                 #unknown line
                 self.parts.append(line)
+            if self.header.duration == max_dur:
+                return
             line = next(rpt_file)
+            # self.parts.append(line)
 
-        return next(rpt_file)
+        return rpt_file
 
 
     def __str__(self):
-        return super().__str__()
+        s = ''
+
+        for line in self.parts:
+            s+= str(line)
+
+        return s

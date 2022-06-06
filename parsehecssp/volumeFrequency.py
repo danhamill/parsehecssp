@@ -11,7 +11,10 @@ class ParseVolumeFrequency(object):
         with open(rpt_filename, 'rt') as rpt_file:
             next(rpt_file)
             for line in rpt_file:
-                if Header.test(line):
+
+                if line == '\n':
+                    self.analysis_parts.append(line)
+                elif Header.test(line):
                     hh = Header()
                     hh.import_rpt(line, rpt_file)
                     self.analysis_parts.append(hh)
@@ -21,11 +24,12 @@ class ParseVolumeFrequency(object):
                     self.analysis_parts.append(id)
                 elif NDayResult.test(line):
                     nd = NDayResult()
-                    nd.import_rpt(line, rpt_file)
+                    nd.import_rpt(line, rpt_file, id.durations.ndays[-1])
                     self.analysis_parts.append(nd)
                 else:
-                    #Unknown line
-                    self.analysis_parts.append(line)
+                    if line != '============================================================================\n':
+                        #Unknown line
+                        self.analysis_parts.append(line)
 
     def write(self, out_rpt_filename):
 

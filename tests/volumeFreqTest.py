@@ -40,6 +40,7 @@ def main():
         print('Files are identical')
     else: 
         print('files are not identical')
+        print(output)
 
 
 if __name__ == '__main__':
