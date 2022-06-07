@@ -145,10 +145,10 @@ class EmpiricalData(SubFeature):
     def __init__(self) -> None:
         self.rows = []
         self.events = {}
-        self.ordered_events= {}
+        self.orderedEvents= {}
 
 
-    def import_rpt(self, line, rpt_file):
+    def import_rpt(self, line, rpt_file, duration):
 
         # Header
         while not bool(re.match("\d{4}", line[10:14])):
@@ -158,10 +158,11 @@ class EmpiricalData(SubFeature):
         # Table
         while line[:6] != '|-----':
             chunks = line.split()
-            self.events.update({''.join(chunks[1:4]):chunks[4]})
-            self.ordered_events.update({chunks[6]:{'wy':chunks[7],
-                                                   'flow':chunks[8],
-                                                   'hsPlotPos':chunks[9]}
+            self.events.update({''.join(chunks[1:4]): chunks[4]})
+            self.orderedEvents.update({chunks[6]:{'wy': chunks[7],
+                                                   'flow': chunks[8],
+                                                   'hsPlotPos': chunks[9],
+                                                   'n-day': f'{duration.zfill(2)}-day'}
                                         })
             self.rows.append(line)
             line = next(rpt_file)
@@ -183,14 +184,15 @@ class EmpiricalData(SubFeature):
 
 class FrequencyCurve(SubFeature):
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.rows = []
         self.computedCurve = {}
-        self.upperConf = {}
-        self.lowerConf = {}
+        # self.upperConf = {}
+        # self.lowerConf = {}
 
 
-    def import_rpt(self, line, rpt_file):
+
+    def import_rpt(self, line, rpt_file, duration):
 
         table_delim = '|------------------------------|-------------|-----------------------------|'
         while line.strip() != table_delim:
@@ -205,10 +207,14 @@ class FrequencyCurve(SubFeature):
             pctExceedance = chunks[4]
 
             self.computedCurve.update({pctExceedance:{'flow':chunks[1],
-                                                      'variance':chunks[2]}
+                                                      'variance':chunks[2],
+                                                      'uppperConf': chunks[-3],
+                                                      'lowerConf': chunks[-2],
+                                                      'n-day': f'{duration.zfill(2)}-day'
+                                                      }
                                       })
-            self.upperConf.update({pctExceedance:chunks[-3]})
-            self.lowerConf.update({pctExceedance:chunks[-2]})
+            # self.upperConf.update({pctExceedance:chunks[-3]})
+            # self.lowerConf.update({pctExceedance:chunks[-2]})
             self.rows.append(line)
             line = next(rpt_file)
         self.rows.append(line)
@@ -431,6 +437,8 @@ class NDayResult(Feature):
             elif line[:20] == 'Statistical Analysis':
                 self.header.import_rpt(line, rpt_file)
                 self.parts.append(self.header)
+                if self.header.duration == max_dur:
+                    print('here')
             elif line == '<< EMA Representation of Data >>\n':
                 self.ema_data.import_rpt(line, rpt_file)
                 self.parts.append(self.ema_data)
@@ -438,10 +446,10 @@ class NDayResult(Feature):
                 self.moments.import_rpt(line, rpt_file)
                 self.parts.append(self.moments)
             elif line.strip() == '<< Plotting Positions >>':
-                self.empiricalData.import_rpt(line, rpt_file)
+                self.empiricalData.import_rpt(line, rpt_file, self.header.duration)
                 self.parts.append(self.empiricalData)
             elif line.strip() == '<< Frequency Curve >>':
-                self.frequencyCurve.import_rpt(line, rpt_file)
+                self.frequencyCurve.import_rpt(line, rpt_file, self.header.duration)
                 self.parts.append(self.frequencyCurve)
             elif line.strip() == '<< Multiple Grubbs-Beck Test P-Values >>':
                 self.mgbt.import_rpt(line, rpt_file)
@@ -456,12 +464,12 @@ class NDayResult(Feature):
             elif line.strip() == '<< User Statistics >>':
                 self.userStats.import_rpt(line, rpt_file)
                 self.parts.append(self.userStats)
-                # self.parts.append(line)
+                if self.header.duration == max_dur:
+                    return
             else:
                 #unknown line
                 self.parts.append(line)
-            if self.header.duration == max_dur:
-                return
+
             line = next(rpt_file)
             # self.parts.append(line)
 
