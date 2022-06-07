@@ -1,7 +1,7 @@
 from ast import In
 from .features.header import Header
 from .features.inputdata import InputData
-from .features.nDayResults import NDayResult
+from .features.nDayResults import EmpiricalData, NDayResult
 import os.path
 
 class ParseVolumeFrequency(object):
@@ -36,3 +36,16 @@ class ParseVolumeFrequency(object):
         with open(out_rpt_filename, 'w') as outfile:
             for line in self.analysis_parts:
                 outfile.write(str(line))
+
+    def getNDayCurves(self):
+
+        nDayResults = [item.frequencyCurve.computedCurve for item in self.analysis_parts if isinstance(item, NDayResult)]
+
+        return nDayResults
+
+    def getEmpericalData(self):
+
+        empericalResults = [item.empiricalData.orderedEvents for item in self.analysis_parts if isinstance(item, NDayResult)]
+
+        return empericalResults
+
