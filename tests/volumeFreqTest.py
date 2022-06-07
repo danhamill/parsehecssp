@@ -35,6 +35,12 @@ def main():
     rpt = phsp.volumeFrequency.ParseVolumeFrequency(rpt_filename)
     rpt.write(out_file)
 
+    a = rpt.getNDayCurves()
+    b = rpt.getEmpericalData()
+
+
+
+
     output = check_files(out_file, rpt_filename)
     if len(output) ==0:
         print('Files are identical')
