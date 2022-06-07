@@ -5,7 +5,8 @@ with open('README.md', encoding='utf-8') as readme_file:
 
 setuptools.setup(
  name='parsehecssp',
- version = '0.0.1',
+ version = '0.0.2',
+ url = 'https://github.com/danhamill/parsehecssp',
  author = 'Daniel Hamill',
  author_email = 'daniel.hamill@hey.com',
  description = 'Parse HEC-SSP report Files',
