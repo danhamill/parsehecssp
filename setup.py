@@ -1,11 +1,12 @@
 import setuptools
+import pkg_resources
 
 with open('README.md', encoding='utf-8') as readme_file:
     readme = readme_file.read()
 
 setuptools.setup(
  name='parsehecssp',
- version = '0.0.2',
+ version = pkg_resources.require('parsehecssp')[0].version,
  url = 'https://github.com/danhamill/parsehecssp',
  author = 'Daniel Hamill',
  author_email = 'daniel.hamill@hey.com',
