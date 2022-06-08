@@ -19,11 +19,13 @@ jobs:
   deploy:
 
     runs-on: ubuntu-latest
+    strategy:
+      python-version: ['3.9','3.10']
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
       with:
         python-version: '3.9'
     - name: Install dependencies
@@ -44,3 +46,4 @@ jobs:
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
+        verbose: true

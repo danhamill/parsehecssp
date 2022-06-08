@@ -18,3 +18,4 @@ build/lib/parsehecssp/features/header.py
 build/lib/parsehecssp/features/inputdata.py
 build/lib/parsehecssp/features/nDayResults.py
 build/lib/parsehecssp/features/utils.py
+dist/parsehecssp-0.0.2-py3.9.egg
